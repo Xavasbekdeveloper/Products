@@ -1,8 +1,14 @@
+import { Load, Loading } from "./loading.js";
+Loading(4)
+
 const cards = document.querySelector(".products__cards");
-const API_URL = "https://fakestoreapi.com/products";
+const moreBtn = document.querySelector(".more__btn");
+const API_URL = "https://fakestoreapi.com";
+let limitCard = 4
+let count = 1
 
 async function getProduct(api) {
-    let data = await fetch(api, {
+    let data = await fetch(`${api}/products?limit=${limitCard * count}`, {
         method: "GET",
     })
 
@@ -10,6 +16,11 @@ async function getProduct(api) {
         .json()
         .then(res => mapProducts(res))
         .catch(err => console.log(err))
+        .finally(() => {
+            moreBtn.innerHTML = "See more"
+            moreBtn.removeAttribute("disabled")
+            Load.style.display = "none"
+        })
 
 }
 
@@ -18,11 +29,11 @@ getProduct(API_URL)
 function mapProducts(products) {
     let card = ""
 
-    products.slice(0, 10).forEach(product => {
+    products.forEach(product => {
         card += `
-          <div class="products__card">
+            <div class="products__card">
                 <div class="products__card__img">
-                    <img src=${product.image} alt="img">
+                    <img class="card-img" data-id="${product.id}" src=${product.image} alt="img">
                 </div>
 
                 <div class="products__card__btns">
@@ -52,9 +63,24 @@ function mapProducts(products) {
                     </div>
                 </div>
             </div>  
-        
         `
     })
 
     cards.innerHTML = card
 }
+
+moreBtn.addEventListener('click', () => {
+    count++
+    moreBtn.innerHTML = "Loading..."
+    getProduct(API_URL)
+    moreBtn.setAttribute("disabled", true)
+
+})
+
+
+cards.addEventListener('click', (e) => {
+    if (e.target.className === "card-img") {
+        let id = e.target.dataset.id
+        window.open(`./pages/products.html?id=${id}`, "_self")
+    }
+})
